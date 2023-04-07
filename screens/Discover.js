@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native";
 import { Image } from "react-native";
@@ -10,6 +10,7 @@ import MenuContainer from "../components/MenuContainer";
 
 import { FontAwesome } from "@expo/vector-icons";
 import ItemCardContainer from "../components/ItemCardContainer";
+import { getPlacesData } from "../api";
 
 const Discover = () => {
   const navigation = useNavigation();
@@ -18,10 +19,21 @@ const Discover = () => {
   const [isLoading, setisLoading] = useState(false);
   const [mainData, setMainData] = useState([]);
 
-  //when theres any changes in the ui the uselayot will be triggered
+  //when theres any changes in the ui the uselayot will be triggered and re-render the entire UI
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
+    });
+  }, []);
+
+  //use effect if any changes will re-render the componet
+  useEffect(() => {
+    setisLoading(true);
+    getPlacesData().then((data) => {
+      setMainData(data);
+      setInterval(() => {
+        setisLoading(false);
+      }, 2000);
     });
   }, []);
 
@@ -106,32 +118,29 @@ const Discover = () => {
             <View className="px-4 mt-8 flex-row items-center justify-evenly flex-wrap">
               {mainData?.length > 0 ? (
                 <>
-                  <ItemCardContainer
-                    key={101}
-                    imageSrc={
-                      "https://cdn.pixabay.com/photo/2015/12/01/20/28/road-1072823_640.jpg"
-                    }
-                    title="Location of the lands"
-                    location="Qatar"
-                  />
-                  <ItemCardContainer
-                    key={102}
-                    imageSrc={
-                      "https://cdn.pixabay.com/photo/2018/02/03/15/40/landscape-3127859_640.jpg"
-                    }
-                    title="Something"
-                    location="Doha"
-                  />
+                  {mainData?.map((data, i) => (
+                    <ItemCardContainer
+                      key={i}
+                      imageSrc={
+                        data?.photo?.images?.medium?.url
+                          ? data?.photo?.images?.medium?.url
+                          : "https://cdn.pixabay.com/photo/2015/10/30/12/22/eat-1014025_1280.jpg"
+                      }
+                      title={data?.name}
+                      location={data?.location_string}
+                      data={data}
+                    />
+                  ))}
                 </>
               ) : (
                 <>
                   <View className="w-full h-[400px] items-center space-y-8 justify-center">
                     <Image
                       source={NotFound}
-                      className="w-32 h-32 object-cover"
+                      className=" w-32 h-32 object-cover"
                     />
-                    <Text className="text-[#428288] text-[20px] font-semibold">
-                      Ooops... No data found
+                    <Text className="text-2xl text-[#428288] font-semibold">
+                      Opps...No Data Found
                     </Text>
                   </View>
                 </>
